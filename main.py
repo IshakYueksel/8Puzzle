@@ -1,38 +1,41 @@
 import heapq
+import random
 from copy import deepcopy
 from time import time
 
-
-class PriorityQueue:
-    def __init__(self):
+"""
+Inspired by github user rickybassom
+https://github.com/rickybassom/8-puzzle-problem-solver
+"""
+class PriorityQueue:                                # Class for creating a PriorityQueue
+    def __init__(self):                             # Initializing
         self.heap = []
-        self.count = 0
+        self.count = 0                              # Setting heap count to 0
 
-    def push(self, item, priority):
+    def push(self, item, priority):                 # Adding element to queue
         entry = (priority, self.count, item)
         heapq.heappush(self.heap, entry)
         self.count += 1
 
-    def pop(self):
+    def pop(self):                                  # Removing element from queue
         (_, _, item) = heapq.heappop(self.heap)
         return item
 
-    def isEmpty(self):
+    def isEmpty(self):                              # Clearing heap
         return len(self.heap) == 0
 
 
-class Grid:
-    n = 0  # track num of objects created
+class Grid:                                         # Class for creating the playgrid
+    n = 0                                                                                   # Variable for keeping track of nodes
 
     def __init__(self, nodes, node_positions=None, last_move=None, parent=None):
-        Grid.n += 1
-
+        Grid.n += 1                                                                         # Tracking nodecount
         self.last_move = last_move
         self.nodes = nodes
         N = len(self.nodes)
 
         if node_positions == None:
-            self.node_positions = {}  # stores value:(x, y)
+            self.node_positions = {}                                                        # stores node position (x, y)
             for y in range(N):
                 for x in range(N):
                     self.node_positions[self.nodes[y][x]] = (y, x)
@@ -44,7 +47,7 @@ class Grid:
 
         if self.parent: self.g = self.parent.g + 1
 
-    def swap_values(self, tile1_pos, tile2_pos):
+    def swap_values(self, tile1_pos, tile2_pos):                                            # swapping nodes
         temp = self.nodes[tile1_pos[0]][tile1_pos[1]]
         self.nodes[tile1_pos[0]][tile1_pos[1]] = self.nodes[tile2_pos[0]][tile2_pos[1]]
         self.nodes[tile2_pos[0]][tile2_pos[1]] = temp
@@ -77,6 +80,7 @@ class Grid:
         elif (swipe_direction == "left"):
             self.swap_values((blank_tile_ypos, blank_tile_xpos), (blank_tile_ypos, blank_tile_xpos + 1))
 
+
     def get_child_boards(self):
         child_boards = []
         for swipe in self.swipes_that_change_board_config():
@@ -85,6 +89,7 @@ class Grid:
             child_boards.append(child)
 
         return child_boards
+
 
     def __eq__(self, other):
         return self.nodes == other.nodes
@@ -107,7 +112,7 @@ class Game():
         print(self.goal_state)
         print()
 
-    def manhattan_distance_heuristic(self, grid1, grid2):
+    def manhattan_distance_heuristic(self, grid1, grid2):               # Manhattan heuristic
         sum = 0
         for y in range(len(grid1.nodes)):
             for x in range(len(grid1.nodes)):
@@ -118,7 +123,7 @@ class Game():
 
         return sum
 
-    def num_misplaced_tiles_heuristic(self, grid1, grid2):
+    def num_misplaced_tiles_heuristic(self, grid1, grid2):              # Hamming heuristic
         count = 0
         for y in range(len(grid1.nodes)):
             for x in range(len(grid1.nodes)):
@@ -129,13 +134,12 @@ class Game():
 
         return count
 
-    def solve(self, h_function):
+    def solve(self, h_function):                                            # h_function chosen heuristic
         """
-        A* solver
-        :param h_function: heuristic_function(Grid start, Grid goal)
-        :return: path found to goal
+        A* algorithm
+
         """
-        open_set = PriorityQueue()  # stored ordered nodes by f value
+        open_set = PriorityQueue()                                          # stored ordered nodes by f value
         f = h_function(self.start_state, self.goal_state) + self.start_state.g
         open_set.push(self.start_state, f)
         closed_set = set()
@@ -170,10 +174,32 @@ class Game():
             print("No solution found")
 
 
-def grid(N):
-    print("Enter grid seperated by single spaces (use zero as a space) and press enter to input new row")
-    arr2d = [[int(j) for j in input().strip().split(" ")] for i in range(N)]
-    return arr2d
+def grid(S, i):
+     if i == 1:
+        print("Enter grid seperated by single spaces (use zero as a space) and press enter to input new row")
+        arr2d = [[int(j) for j in input().strip().split(" ")] for i in range(S)]            #Creating your own Grid
+        print(arr2d)
+        return arr2d
+     elif i == 2:                                                                           #Creating a randomized Grid
+         a = random.sample(range(0, 3), 3)
+         b = random.sample(range(3, 6), 3)
+         c = random.sample(range(6, 9), 3)
+         lst = []
+         i = random.randint(0, 2)
+
+         if i == 0:
+             lst.append(a)
+             lst.append(b)
+             lst.append(c)
+         elif i == 1:
+             lst.append(b)
+             lst.append(a)
+             lst.append(c)
+         elif i == 2:
+             lst.append(c)
+             lst.append(b)
+             lst.append(a)
+         return lst
 
 
 if __name__ == "__main__":
@@ -189,39 +215,67 @@ if __name__ == "__main__":
         [6, 7, 8]
     ]
 
+
     while True:
-        N = 3
+        S = 3
         break
-
-    print("Enter start grid")
-    start_grid = grid(N)
-    print()
-    print("Enter end grid")
-    goal_grid = grid(N)
-    game = Game(start_grid, goal_grid)
-
-    while True:
-        which_h = input("Number of misplaced tiles heuristic (1) or Manhattan distance heuristic (2)? ")
-        if which_h in ["1", "2"]:
-            break
-        print('Please enter 1 or 2')
-
-        print("Processing")
+    gametype = input("Type 1 for a single game with custom start and end grids or type 2 for 100 randomly generated games\n")
+    if gametype == "1":
+        print("Enter start grid")
+        start_grid = grid(S, 1)                                         #Creating start grid
         print()
+        print("Enter end grid")
+        goal_grid = grid(S, 1)                                          #Creating goal grid
+        game = Game(start_grid, goal_grid)                              #Initializing Game
+        while True:
+            which_h = input("Hamming heuristic (1) or Manhattan distance heuristic (2)? ")
+            if which_h in ["1", "2"]:
+                break
+            print('Please enter 1 or 2')
 
-    if which_h == "1":
-        start_time = time()
-        path = game.solve(game.num_misplaced_tiles_heuristic)
-        end_time = time()
-    else:
-        start_time = time()
-        path = game.solve(game.manhattan_distance_heuristic)
-        end_time = time()
+            print("Processing")
+            print()
 
-    for node in path:
-        print(node)
-        print()
+        if which_h == "1":
+            start_time = time()
+            path = game.solve(game.num_misplaced_tiles_heuristic)       #Starting Game with hamming heurisitc
+            end_time = time()
+        else:
+            start_time = time()
+            path = game.solve(game.manhattan_distance_heuristic)        #Starting Game with manhattan heuristic
+            end_time = time()
 
-    print("Solved in", len(path) - 1, "moves")
-    print(end_time - start_time, "seconds to solve")
-    print(Grid.n, "nodes created")
+
+        print(end_time - start_time, "seconds to solve")
+        print(Grid.n, "nodes created")
+    if gametype == "2":
+
+        while True:
+            which_h = input("Number of misplaced tiles heuristic (1) or Manhattan distance heuristic (2)? ")
+            if which_h in ["1", "2"]:
+                break
+            print('Please enter 1 or 2')
+
+            print("Processing")
+            print()
+
+        if which_h == "1":
+            start_time = time()
+            for k in range(100):                                            #100 Random Games with hamming heuristic
+                start_grid = grid(S, 2)
+                goal_grid = grid(S, 2)
+                game = Game(start_grid, goal_grid)
+                path = game.solve(game.num_misplaced_tiles_heuristic)
+            end_time = time()
+        else:
+            start_time = time()
+            for m in range(100):                                            #100 Random Games with Manhattan heurisitc
+                start_grid = grid(S, 2)
+                goal_grid = grid(S, 2)
+                game = Game(start_grid, goal_grid)
+                path = game.solve(game.manhattan_distance_heuristic)
+            end_time = time()
+
+
+        print(end_time - start_time, "seconds to solve")
+        print(Grid.n, "nodes created")
